@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TakeOFF — Driver Sign In</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="flag">▲</span> TakeOFF</div>
+    <div class="who">Driver Onboarding</div>
+  </header>
+
+  <main class="page">
+    <div class="card center-card">
+      <div class="filter-bar" role="tablist" aria-label="Choose sign in or sign up">
+        <button id="tabSignin" class="active" type="button">Sign in</button>
+        <button id="tabSignup" type="button">Sign up</button>
+      </div>
+
+      <div id="alert" class="alert"></div>
+
+      <!-- SIGN IN -->
+      <form id="signinForm">
+        <h2>Welcome back</h2>
+        <p class="muted">Sign in to continue your driver application.</p>
+        <label class="req" for="siEmail">Email</label>
+        <input id="siEmail" type="email" required autocomplete="email" />
+        <label class="req" for="siPassword">Password</label>
+        <input id="siPassword" type="password" required autocomplete="current-password" />
+        <div class="btn-row">
+          <button class="btn-primary btn-block" type="submit">Sign in</button>
+        </div>
+      </form>
+
+      <!-- SIGN UP -->
+      <form id="signupForm" style="display:none">
+        <h2>Create your driver account</h2>
+        <p class="muted">Takes about 5 minutes. You'll verify your phone next.</p>
+        <label class="req" for="suName">Full name</label>
+        <input id="suName" type="text" required />
+        <label class="req" for="suEmail">Email</label>
+        <input id="suEmail" type="email" required autocomplete="email" />
+        <label class="req" for="suPhone">Phone (with country code)</label>
+        <input id="suPhone" type="tel" placeholder="+14155550123" required />
+        <div class="hint">Use E.164 format, e.g. +14155550123 or +919812345678.</div>
+        <label class="req" for="suPassword">Password</label>
+        <input id="suPassword" type="password" minlength="8" required autocomplete="new-password" />
+        <div class="hint">At least 8 characters.</div>
+        <div class="btn-row">
+          <button class="btn-primary btn-block" type="submit">Create account</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="app-footer">TakeOFF Driver Onboarding</footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (Session.isLoggedIn()) {
+      window.location.href = Session.user.role === 'admin' ? '/admin.html' : '/dashboard.html';
+    }
+
+    const alertEl = document.getElementById('alert');
+    const signinForm = document.getElementById('signinForm');
+    const signupForm = document.getElementById('signupForm');
+    const tabSignin = document.getElementById('tabSignin');
+    const tabSignup = document.getElementById('tabSignup');
+
+    function showTab(tab) {
+      hideAlert(alertEl);
+      const isIn = tab === 'signin';
+      signinForm.style.display = isIn ? 'block' : 'none';
+      signupForm.style.display = isIn ? 'none' : 'block';
+      tabSignin.classList.toggle('active', isIn);
+      tabSignup.classList.toggle('active', !isIn);
+    }
+    tabSignin.addEventListener('click', () => showTab('signin'));
+    tabSignup.addEventListener('click', () => showTab('signup'));
+
+    signinForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert(alertEl);
+      const email = document.getElementById('siEmail').value.trim();
+      const password = document.getElementById('siPassword').value;
+      try {
+        const data = await api('/auth/login', { method: 'POST', body: { email, password } });
+        Session.token = data.token;
+        Session.user = data.user;
+        window.location.href = data.user.role === 'admin' ? '/admin.html' : '/dashboard.html';
+      } catch (err) {
+        if (err.data?.requiresOtp) {
+          sessionStorage.setItem('takeoff_pending_phone', err.data.phone);
+          sessionStorage.setItem('takeoff_otp_purpose', 'login');
+          window.location.href = '/otp.html';
+          return;
+        }
+        showAlert(alertEl, err.message);
+      }
+    });
+
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert(alertEl);
+      const fullName = document.getElementById('suName').value.trim();
+      const email = document.getElementById('suEmail').value.trim();
+      const phone = document.getElementById('suPhone').value.trim();
+      const password = document.getElementById('suPassword').value;
+      try {
+        await api('/auth/signup', { method: 'POST', body: { fullName, email, phone, password } });
+        sessionStorage.setItem('takeoff_pending_phone', phone);
+        sessionStorage.setItem('takeoff_otp_purpose', 'signup');
+        window.location.href = '/otp.html';
+      } catch (err) {
+        showAlert(alertEl, err.message);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TakeOFF — Complete Your Application</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="flag">▲</span> TakeOFF</div>
+    <div class="who">
+      <span id="whoName"></span>
+      <button class="linklike" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1>Complete your driver application</h1>
+    <p class="muted">Fill in each section, then review and submit. You can save a section and come back later.</p>
+
+    <div class="steps" id="steps">
+      <div class="step active" data-step="1">1<br><span class="label">Personal</span></div>
+      <div class="step" data-step="2">2<br><span class="label">Identity</span></div>
+      <div class="step" data-step="3">3<br><span class="label">Vehicle</span></div>
+      <div class="step" data-step="4">4<br><span class="label">Documents</span></div>
+      <div class="step" data-step="5">5<br><span class="label">Review</span></div>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <!-- STEP 1: Personal -->
+    <section class="card" id="section1">
+      <h2>Personal &amp; contact details</h2>
+      <form id="personalForm">
+        <div class="field-row">
+          <div>
+            <label for="dob">Date of birth</label>
+            <input id="dob" type="date" />
+          </div>
+          <div>
+            <label for="gender">Gender</label>
+            <select id="gender">
+              <option value="">Prefer not to answer</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+              <option value="prefer_not_to_say">Prefer not to say</option>
+            </select>
+          </div>
+        </div>
+        <label class="req" for="address1">Address line 1</label>
+        <input id="address1" required />
+        <label for="address2">Address line 2</label>
+        <input id="address2" />
+        <div class="field-row three">
+          <div>
+            <label class="req" for="city">City</label>
+            <input id="city" required />
+          </div>
+          <div>
+            <label class="req" for="state">State / Province</label>
+            <input id="state" required />
+          </div>
+          <div>
+            <label class="req" for="postal">Postal code</label>
+            <input id="postal" required />
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label for="ecName">Emergency contact name</label>
+            <input id="ecName" />
+          </div>
+          <div>
+            <label for="ecPhone">Emergency contact phone</label>
+            <input id="ecPhone" placeholder="+14155550123" />
+          </div>
+        </div>
+        <label for="experience">Years of driving experience</label>
+        <input id="experience" type="number" min="0" max="70" />
+        <div class="btn-row">
+          <button class="btn-primary" type="submit">Save &amp; continue</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- STEP 2: Identity -->
+    <section class="card" id="section2" style="display:none">
+      <h2>Identity verification</h2>
+      <form id="identityForm">
+        <label class="req" for="idType">ID type</label>
+        <select id="idType" required>
+          <option value="">Select…</option>
+          <option value="driver_license">Driver's license</option>
+          <option value="national_id">National ID</option>
+          <option value="passport">Passport</option>
+          <option value="aadhaar">Aadhaar</option>
+          <option value="other">Other</option>
+        </select>
+        <label class="req" for="idNumber">ID number</label>
+        <input id="idNumber" required />
+        <div class="field-row">
+          <div>
+            <label for="idCountry">Issuing country</label>
+            <input id="idCountry" />
+          </div>
+          <div>
+            <label for="idExpiry">Expiry date</label>
+            <input id="idExpiry" type="date" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" type="button" onclick="goToStep(1)">Back</button>
+          <button class="btn-primary" type="submit">Save &amp; continue</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- STEP 3: Vehicle -->
+    <section class="card" id="section3" style="display:none">
+      <h2>Vehicle details</h2>
+      <form id="vehicleForm">
+        <label class="req" for="vType">Vehicle type</label>
+        <select id="vType" required>
+          <option value="">Select…</option>
+          <option value="sedan">Sedan</option>
+          <option value="hatchback">Hatchback</option>
+          <option value="suv">SUV</option>
+          <option value="motorcycle">Motorcycle</option>
+          <option value="van">Van</option>
+          <option value="truck">Truck</option>
+          <option value="other">Other</option>
+        </select>
+        <div class="field-row three">
+          <div>
+            <label class="req" for="vMake">Make</label>
+            <input id="vMake" required />
+          </div>
+          <div>
+            <label class="req" for="vModel">Model</label>
+            <input id="vModel" required />
+          </div>
+          <div>
+            <label class="req" for="vYear">Year</label>
+            <input id="vYear" type="number" min="1980" max="2027" required />
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label for="vColor">Color</label>
+            <input id="vColor" />
+          </div>
+          <div>
+            <label for="vSeats">Seating capacity</label>
+            <input id="vSeats" type="number" min="1" max="60" />
+          </div>
+        </div>
+        <label class="req" for="vPlate">License plate number</label>
+        <input id="vPlate" required />
+        <div class="btn-row">
+          <button class="btn-secondary" type="button" onclick="goToStep(2)">Back</button>
+          <button class="btn-primary" type="submit">Save &amp; continue</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- STEP 4: Documents -->
+    <section class="card" id="section4" style="display:none">
+      <h2>Upload documents</h2>
+      <p class="muted">JPG, PNG, WEBP, or PDF — up to 5MB each. At least one identity document and one vehicle document are required.</p>
+
+      <h3>Identity documents</h3>
+      <div class="doc-grid">
+        <div class="doc-tile" data-doc="identity:government_id">
+          <strong>Government ID (front)</strong>
+          <div class="status muted">Not uploaded</div>
+          <input type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" style="margin-top:8px" />
+        </div>
+        <div class="doc-tile" data-doc="identity:selfie">
+          <strong>Selfie photo</strong>
+          <div class="status muted">Not uploaded</div>
+          <input type="file" accept=".jpg,.jpeg,.png,.webp" style="margin-top:8px" />
+        </div>
+      </div>
+
+      <h3 style="margin-top:22px">Vehicle documents</h3>
+      <div class="doc-grid">
+        <div class="doc-tile" data-doc="vehicle:license">
+          <strong>Driver's license</strong>
+          <div class="status muted">Not uploaded</div>
+          <input type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" style="margin-top:8px" />
+        </div>
+        <div class="doc-tile" data-doc="vehicle:registration">
+          <strong>Vehicle registration (RC)</strong>
+          <div class="status muted">Not uploaded</div>
+          <input type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" style="margin-top:8px" />
+        </div>
+        <div class="doc-tile" data-doc="vehicle:insurance">
+          <strong>Insurance certificate</strong>
+          <div class="status muted">Not uploaded</div>
+          <input type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" style="margin-top:8px" />
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-secondary" type="button" onclick="goToStep(3)">Back</button>
+        <button class="btn-primary" type="button" onclick="goToStep(5)">Continue to review</button>
+      </div>
+    </section>
+
+    <!-- STEP 5: Review & Submit -->
+    <section class="card" id="section5" style="display:none">
+      <h2>Review &amp; submit</h2>
+      <div id="reviewSummary"></div>
+      <hr class="divider" />
+      <p class="muted">By submitting, you confirm the information above is accurate. You won't be able to edit it once submitted.</p>
+      <div class="btn-row">
+        <button class="btn-secondary" type="button" onclick="goToStep(4)">Back</button>
+        <button class="btn-primary" id="submitBtn" type="button">Submit application</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">TakeOFF Driver Onboarding — Track A demo build</footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    requireRole('driver');
+    document.getElementById('whoName').textContent = Session.user.fullName;
+    const alertEl = document.getElementById('alert');
+
+    function goToStep(n) {
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`section${i}`).style.display = i === n ? 'block' : 'none';
+      }
+      document.querySelectorAll('.step').forEach((el) => {
+        const s = Number(el.dataset.step);
+        el.classList.toggle('active', s === n);
+        el.classList.toggle('done', s < n);
+      });
+      if (n === 5) renderReview();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function loadExisting() {
+      try {
+        const data = await api('/onboarding/me');
+        if (data.application && data.application.status !== 'draft') {
+          window.location.href = '/dashboard.html';
+          return;
+        }
+        if (data.profile) {
+          document.getElementById('dob').value = (data.profile.date_of_birth || '').slice(0, 10);
+          document.getElementById('gender').value = data.profile.gender || '';
+          document.getElementById('address1').value = data.profile.address_line1 || '';
+          document.getElementById('address2').value = data.profile.address_line2 || '';
+          document.getElementById('city').value = data.profile.city || '';
+          document.getElementById('state').value = data.profile.state || '';
+          document.getElementById('postal').value = data.profile.postal_code || '';
+          document.getElementById('ecName').value = data.profile.emergency_contact_name || '';
+          document.getElementById('ecPhone').value = data.profile.emergency_contact_phone || '';
+          document.getElementById('experience').value = data.profile.years_of_experience || '';
+        }
+        if (data.identity) {
+          document.getElementById('idType').value = data.identity.id_type || '';
+          document.getElementById('idNumber').value = data.identity.id_number || '';
+          document.getElementById('idCountry').value = data.identity.issuing_country || '';
+          document.getElementById('idExpiry').value = (data.identity.expiry_date || '').slice(0, 10);
+        }
+        if (data.vehicle) {
+          document.getElementById('vType').value = data.vehicle.vehicle_type || '';
+          document.getElementById('vMake').value = data.vehicle.make || '';
+          document.getElementById('vModel').value = data.vehicle.model || '';
+          document.getElementById('vYear').value = data.vehicle.year || '';
+          document.getElementById('vColor').value = data.vehicle.color || '';
+          document.getElementById('vSeats').value = data.vehicle.seating_capacity || '';
+          document.getElementById('vPlate').value = data.vehicle.plate_number || '';
+        }
+        (data.documents || []).forEach((doc) => {
+          const tile = document.querySelector(`.doc-tile[data-doc="${doc.doc_category}:${doc.doc_type}"]`);
+          if (tile) {
+            tile.classList.add('filled');
+            tile.querySelector('.status').textContent = `Uploaded: ${doc.original_name}`;
+          }
+        });
+        window.__lastData = data;
+      } catch (err) {
+        showAlert(alertEl, err.message);
+      }
+    }
+
+    document.getElementById('personalForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert(alertEl);
+      try {
+        await api('/onboarding/personal', { method: 'PUT', body: {
+          dateOfBirth: document.getElementById('dob').value || null,
+          gender: document.getElementById('gender').value || null,
+          addressLine1: document.getElementById('address1').value,
+          addressLine2: document.getElementById('address2').value || null,
+          city: document.getElementById('city').value,
+          state: document.getElementById('state').value,
+          postalCode: document.getElementById('postal').value,
+          emergencyContactName: document.getElementById('ecName').value || null,
+          emergencyContactPhone: document.getElementById('ecPhone').value || null,
+          yearsOfExperience: document.getElementById('experience').value || null
+        }});
+        goToStep(2);
+      } catch (err) { showAlert(alertEl, err.message); }
+    });
+
+    document.getElementById('identityForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert(alertEl);
+      try {
+        await api('/onboarding/identity', { method: 'PUT', body: {
+          idType: document.getElementById('idType').value,
+          idNumber: document.getElementById('idNumber').value,
+          issuingCountry: document.getElementById('idCountry').value || null,
+          expiryDate: document.getElementById('idExpiry').value || null
+        }});
+        goToStep(3);
+      } catch (err) { showAlert(alertEl, err.message); }
+    });
+
+    document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert(alertEl);
+      try {
+        await api('/onboarding/vehicle', { method: 'PUT', body: {
+          vehicleType: document.getElementById('vType').value,
+          make: document.getElementById('vMake').value,
+          model: document.getElementById('vModel').value,
+          year: Number(document.getElementById('vYear').value),
+          color: document.getElementById('vColor').value || null,
+          seatingCapacity: document.getElementById('vSeats').value || null,
+          plateNumber: document.getElementById('vPlate').value
+        }});
+        goToStep(4);
+      } catch (err) { showAlert(alertEl, err.message); }
+    });
+
+    document.querySelectorAll('.doc-tile input[type="file"]').forEach((input) => {
+      input.addEventListener('change', async (e) => {
+        hideAlert(alertEl);
+        const file = e.target.files[0];
+        if (!file) return;
+        const tile = e.target.closest('.doc-tile');
+        const [docCategory, docType] = tile.dataset.doc.split(':');
+        const statusEl = tile.querySelector('.status');
+        statusEl.textContent = 'Uploading…';
+
+        const form = new FormData();
+        form.append('file', file);
+        form.append('docCategory', docCategory);
+        form.append('docType', docType);
+
+        try {
+          await api('/onboarding/documents', { method: 'POST', body: form, isForm: true });
+          tile.classList.add('filled');
+          statusEl.textContent = `Uploaded: ${file.name}`;
+        } catch (err) {
+          statusEl.textContent = 'Upload failed';
+          showAlert(alertEl, err.message);
+        }
+      });
+    });
+
+    function renderReview() {
+      const d = window.__lastData || {};
+      const p = d.profile || {}, i = d.identity || {}, v = d.vehicle || {};
+      const docs = d.documents || [];
+      document.getElementById('reviewSummary').innerHTML = `
+        <h3>Personal</h3>
+        <p class="muted">${p.address_line1 || ''} ${p.address_line2 || ''}, ${p.city || ''}, ${p.state || ''} ${p.postal_code || ''}</p>
+        <h3>Identity</h3>
+        <p class="muted">${(i.id_type || '—').replace('_',' ')} — ${i.id_number || '—'}</p>
+        <h3>Vehicle</h3>
+        <p class="muted">${v.year || ''} ${v.make || ''} ${v.model || ''} (${v.vehicle_type || ''}) — Plate: ${v.plate_number || '—'}</p>
+        <h3>Documents (${docs.length})</h3>
+        <p class="muted">${docs.map(x => x.doc_type.replace('_',' ')).join(', ') || 'None uploaded'}</p>
+      `;
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+      hideAlert(alertEl);
+      try {
+        await loadExisting(); // refresh before final check
+        await api('/onboarding/submit', { method: 'POST' });
+        window.location.href = '/dashboard.html';
+      } catch (err) {
+        showAlert(alertEl, err.message);
+      }
+    });
+
+    loadExisting();
+  </script>
+</body>
+</html>

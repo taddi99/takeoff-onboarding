@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TakeOFF — My Application</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="flag">▲</span> TakeOFF</div>
+    <div class="who">
+      <span id="whoName"></span>
+      <button class="linklike" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1>Your application</h1>
+    <div id="alert" class="alert"></div>
+
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h2 style="margin-bottom:4px">Status</h2>
+          <p class="muted" id="statusSub">Loading…</p>
+        </div>
+        <div id="statusBadge"></div>
+      </div>
+
+      <div id="draftBanner" class="alert alert-info" style="display:none">
+        Your application is still a draft. Finish and submit it to be reviewed.
+      </div>
+      <div id="rejectedBanner" class="alert alert-error" style="display:none"></div>
+      <div id="approvedBanner" class="alert alert-success" style="display:none">
+        You're approved! Welcome to TakeOFF.
+      </div>
+
+      <div class="btn-row" id="ctaRow"></div>
+    </div>
+
+    <div class="card">
+      <h3>Application summary</h3>
+      <div id="summary" class="muted">Loading…</div>
+    </div>
+
+    <div class="card">
+      <h3>Uploaded documents</h3>
+      <div id="docs" class="doc-grid"></div>
+    </div>
+  </main>
+
+  <footer class="app-footer">TakeOFF Driver Onboarding — Track A demo build</footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    requireRole('driver');
+    document.getElementById('whoName').textContent = Session.user.fullName;
+    const alertEl = document.getElementById('alert');
+
+    async function load() {
+      try {
+        const data = await api('/onboarding/me');
+        const app = data.application || { status: 'draft' };
+        document.getElementById('statusBadge').innerHTML = statusBadge(app.status);
+
+        const subs = {
+          draft: 'Not yet submitted.',
+          submitted: `Submitted on ${formatDate(app.submitted_at)}. Awaiting review.`,
+          under_review: 'A reviewer is currently looking at your application.',
+          approved: `Approved on ${formatDate(app.reviewed_at)}.`,
+          rejected: `Reviewed on ${formatDate(app.reviewed_at)}.`
+        };
+        document.getElementById('statusSub').textContent = subs[app.status] || '';
+
+        document.getElementById('draftBanner').style.display = app.status === 'draft' ? 'block' : 'none';
+        document.getElementById('approvedBanner').style.display = app.status === 'approved' ? 'block' : 'none';
+        const rejectedEl = document.getElementById('rejectedBanner');
+        if (app.status === 'rejected') {
+          rejectedEl.style.display = 'block';
+          rejectedEl.textContent = app.review_notes
+            ? `Your application was not approved. Reviewer notes: ${app.review_notes}`
+            : 'Your application was not approved this time.';
+        } else {
+          rejectedEl.style.display = 'none';
+        }
+
+        const cta = document.getElementById('ctaRow');
+        cta.innerHTML = '';
+        if (app.status === 'draft') {
+          cta.innerHTML = `<button class="btn-primary" onclick="window.location.href='/onboarding.html'">Continue application</button>`;
+        }
+
+        const p = data.profile || {}, i = data.identity || {}, v = data.vehicle || {};
+        document.getElementById('summary').innerHTML = data.profile ? `
+          <p><strong>Address:</strong> ${p.address_line1 || ''}, ${p.city || ''}, ${p.state || ''} ${p.postal_code || ''}</p>
+          <p><strong>Identity:</strong> ${(i.id_type || '—').replace('_',' ')} ${i.id_number ? '— ' + i.id_number : ''}</p>
+          <p><strong>Vehicle:</strong> ${v.year ? `${v.year} ${v.make} ${v.model} (${v.vehicle_type})` : '—'} ${v.plate_number ? '— Plate ' + v.plate_number : ''}</p>
+        ` : '<p>No details submitted yet.</p>';
+
+        const docsEl = document.getElementById('docs');
+        docsEl.innerHTML = (data.documents || []).length
+          ? data.documents.map(d => `<div class="doc-tile filled"><strong>${d.doc_type.replace('_',' ')}</strong><div class="muted">${d.original_name}</div></div>`).join('')
+          : '<p class="muted">No documents uploaded yet.</p>';
+      } catch (err) {
+        showAlert(alertEl, err.message);
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

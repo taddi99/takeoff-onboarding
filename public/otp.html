@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TakeOFF — Verify Phone</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="flag">▲</span> TakeOFF</div>
+    <div class="who">Driver Onboarding</div>
+  </header>
+
+  <main class="page">
+    <div class="card center-card">
+      <h2>Verify your phone</h2>
+      <p class="muted" id="phoneLabel">We'll send a code to your phone.</p>
+
+      <div id="alert" class="alert"></div>
+      <div id="testCodeBanner" class="alert alert-info"></div>
+
+      <button id="sendBtn" class="btn-secondary btn-block" type="button">Send verification code</button>
+
+      <form id="verifyForm" style="margin-top:18px; display:none;">
+        <label class="req" for="code">Enter the 6-digit code</label>
+        <input id="code" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••••" autocomplete="one-time-code" required />
+        <div class="btn-row">
+          <button class="btn-primary btn-block" type="submit">Verify &amp; continue</button>
+        </div>
+      </form>
+
+      <div class="btn-row">
+        <button id="resendBtn" class="btn-secondary" type="button" style="display:none;">Resend code</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer">TakeOFF Driver Onboarding — Track A demo build</footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const phone = sessionStorage.getItem('takeoff_pending_phone');
+    const purpose = sessionStorage.getItem('takeoff_otp_purpose') || 'signup';
+    if (!phone) window.location.href = '/index.html';
+
+    document.getElementById('phoneLabel').textContent = `We'll send a code to ${phone}.`;
+
+    const alertEl = document.getElementById('alert');
+    const bannerEl = document.getElementById('testCodeBanner');
+    const sendBtn = document.getElementById('sendBtn');
+    const resendBtn = document.getElementById('resendBtn');
+    const verifyForm = document.getElementById('verifyForm');
+
+    async function sendCode() {
+      hideAlert(alertEl);
+      bannerEl.className = 'alert';
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending…';
+      try {
+        const data = await api('/auth/otp/request', { method: 'POST', body: { phone, purpose } });
+        verifyForm.style.display = 'block';
+        resendBtn.style.display = 'inline-flex';
+        sendBtn.style.display = 'none';
+        if (data.testCode) {
+          bannerEl.className = 'alert alert-info show';
+          bannerEl.textContent = `Test OTP mode — your code is ${data.testCode} (also logged on the server console).`;
+        } else {
+          bannerEl.className = 'alert alert-success show';
+          bannerEl.textContent = 'Code sent via SMS. It should arrive within a minute.';
+        }
+        document.getElementById('code').focus();
+      } catch (err) {
+        showAlert(alertEl, err.message);
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send verification code';
+      }
+    }
+
+    sendBtn.addEventListener('click', sendCode);
+    resendBtn.addEventListener('click', sendCode);
+
+    verifyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert(alertEl);
+      const code = document.getElementById('code').value.trim();
+      try {
+        const data = await api('/auth/otp/verify', { method: 'POST', body: { phone, code, purpose } });
+        Session.token = data.token;
+        Session.user = data.user;
+        sessionStorage.removeItem('takeoff_pending_phone');
+        sessionStorage.removeItem('takeoff_otp_purpose');
+        window.location.href = data.user.role === 'admin' ? '/admin.html' : '/onboarding.html';
+      } catch (err) {
+        showAlert(alertEl, err.message);
+      }
+    });
+
+    // Auto-send on load for a smoother demo flow.
+    sendCode();
+  </script>
+</body>
+</html>

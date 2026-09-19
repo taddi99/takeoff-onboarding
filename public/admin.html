@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TakeOFF — Reviewer Dashboard</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="flag">▲</span> TakeOFF <span style="opacity:.6; font-weight:400">Admin</span></div>
+    <div class="who">
+      <span id="whoName"></span>
+      <button class="linklike" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <main class="page wide">
+    <h1>Applications</h1>
+    <div id="alert" class="alert"></div>
+
+    <div class="filter-bar" id="filterBar">
+      <button data-status="" class="active">All</button>
+      <button data-status="submitted">Submitted</button>
+      <button data-status="under_review">Under review</button>
+      <button data-status="approved">Approved</button>
+      <button data-status="rejected">Rejected</button>
+      <button data-status="draft">Draft</button>
+    </div>
+
+    <div class="card" id="listCard">
+      <div class="table-wrap">
+        <table id="appTable">
+          <thead>
+            <tr><th>Driver</th><th>Email</th><th>Phone</th><th>Status</th><th>Submitted</th><th></th></tr>
+          </thead>
+          <tbody id="appTbody"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="empty-state" style="display:none">No applications match this filter.</div>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="card" id="detailCard" style="display:none">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h2 id="dName" style="margin-bottom:2px"></h2>
+          <p class="muted" id="dContact"></p>
+        </div>
+        <div id="dStatusBadge"></div>
+      </div>
+
+      <hr class="divider" />
+      <div id="dBody"></div>
+
+      <hr class="divider" />
+      <h3>Decision</h3>
+      <label for="notes">Reviewer notes (shown to the driver if rejected)</label>
+      <textarea id="notes" placeholder="Optional notes…"></textarea>
+      <div class="btn-row">
+        <button class="btn-secondary" id="markReviewBtn" type="button">Mark under review</button>
+        <button class="btn-success" id="approveBtn" type="button">Approve</button>
+        <button class="btn-danger" id="rejectBtn" type="button">Reject</button>
+        <button class="btn-secondary" id="closeDetailBtn" type="button">Close</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer">TakeOFF Driver Onboarding — Track A demo build</footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    requireRole('admin');
+    document.getElementById('whoName').textContent = Session.user.fullName;
+    const alertEl = document.getElementById('alert');
+    let currentFilter = '';
+    let currentUserId = null;
+
+    async function loadList() {
+      hideAlert(alertEl);
+      try {
+        const qs = currentFilter ? `?status=${currentFilter}` : '';
+        const data = await api(`/admin/applications${qs}`);
+        const tbody = document.getElementById('appTbody');
+        const rows = data.applications || [];
+        document.getElementById('emptyState').style.display = rows.length ? 'none' : 'block';
+        tbody.innerHTML = rows.map(r => `
+          <tr>
+            <td>${r.full_name}</td>
+            <td>${r.email}</td>
+            <td>${r.phone}</td>
+            <td>${statusBadge(r.status)}</td>
+            <td>${formatDate(r.submitted_at)}</td>
+            <td><button class="btn-secondary" onclick="openDetail(${r.user_id})">Review</button></td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        showAlert(alertEl, err.message);
+      }
+    }
+
+    document.getElementById('filterBar').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-status]');
+      if (!btn) return;
+      document.querySelectorAll('#filterBar button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.status;
+      loadList();
+    });
+
+    async function openDetail(userId) {
+      hideAlert(alertEl);
+      currentUserId = userId;
+      try {
+        const data = await api(`/admin/applications/${userId}`);
+        const d = data.driver, p = data.profile || {}, i = data.identity || {}, v = data.vehicle || {};
+        const app = data.application || { status: 'draft' };
+
+        document.getElementById('dName').textContent = d.full_name;
+        document.getElementById('dContact').textContent = `${d.email} · ${d.phone} · Phone verified: ${d.phone_verified ? 'Yes' : 'No'}`;
+        document.getElementById('dStatusBadge').innerHTML = statusBadge(app.status);
+
+        document.getElementById('dBody').innerHTML = `
+          <h3>Personal</h3>
+          <p class="muted">DOB: ${p.date_of_birth ? p.date_of_birth.slice(0,10) : '—'} · Gender: ${p.gender || '—'}</p>
+          <p class="muted">${p.address_line1 || ''} ${p.address_line2 || ''}, ${p.city || ''}, ${p.state || ''} ${p.postal_code || ''}</p>
+          <p class="muted">Emergency contact: ${p.emergency_contact_name || '—'} (${p.emergency_contact_phone || '—'})</p>
+          <h3>Identity</h3>
+          <p class="muted">${(i.id_type || '—').replace('_',' ')} — ${i.id_number || '—'} ${i.expiry_date ? '· Expires ' + i.expiry_date.slice(0,10) : ''}</p>
+          <h3>Vehicle</h3>
+          <p class="muted">${v.year || ''} ${v.make || ''} ${v.model || ''} (${v.vehicle_type || ''}) · Plate ${v.plate_number || '—'} · Seats ${v.seating_capacity || '—'}</p>
+          <h3>Documents</h3>
+          <div class="doc-grid">
+            ${(data.documents || []).map(doc => `
+              <div class="doc-tile filled">
+                <strong>${doc.doc_type.replace('_',' ')}</strong>
+                <div class="muted">${doc.original_name}</div>
+                <a href="/api/admin/documents/${doc.id}/file" target="_blank" rel="noopener">
+                  <button class="btn-secondary" style="margin-top:8px; width:100%;" type="button">View file</button>
+                </a>
+              </div>
+            `).join('') || '<p class="muted">No documents uploaded.</p>'}
+          </div>
+        `;
+
+        document.getElementById('notes').value = app.review_notes || '';
+        const decidable = ['submitted', 'under_review'].includes(app.status);
+        document.getElementById('approveBtn').disabled = !decidable;
+        document.getElementById('rejectBtn').disabled = !decidable;
+        document.getElementById('markReviewBtn').disabled = app.status !== 'submitted';
+
+        document.getElementById('detailCard').style.display = 'block';
+        document.getElementById('detailCard').scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        showAlert(alertEl, err.message);
+      }
+    }
+
+    document.getElementById('closeDetailBtn').addEventListener('click', () => {
+      document.getElementById('detailCard').style.display = 'none';
+      currentUserId = null;
+    });
+
+    document.getElementById('markReviewBtn').addEventListener('click', async () => {
+      try {
+        await api(`/admin/applications/${currentUserId}/mark-review`, { method: 'POST' });
+        await openDetail(currentUserId);
+        await loadList();
+      } catch (err) { showAlert(alertEl, err.message); }
+    });
+
+    async function decide(decision) {
+      const notes = document.getElementById('notes').value.trim();
+      if (decision === 'rejected' && !confirm('Reject this application? The driver will see your notes.')) return;
+      if (decision === 'approved' && !confirm('Approve this application?')) return;
+      try {
+        await api(`/admin/applications/${currentUserId}/decision`, { method: 'POST', body: { decision, notes } });
+        await openDetail(currentUserId);
+        await loadList();
+      } catch (err) { showAlert(alertEl, err.message); }
+    }
+    document.getElementById('approveBtn').addEventListener('click', () => decide('approved'));
+    document.getElementById('rejectBtn').addEventListener('click', () => decide('rejected'));
+
+    loadList();
+  </script>
+</body>
+</html>

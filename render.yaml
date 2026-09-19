@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: takeoff-driver-onboarding
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: APP_BASE_URL
+        value: https://your-render-url.onrender.com
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: OTP_MODE
+        value: test
+      - key: OTP_TEST_CODE
+        value: 123456
+      - key: OTP_EXPIRY_MINUTES
+        value: 10
+      - key: OTP_MAX_ATTEMPTS
+        value: 5
+      - key: UPLOAD_DIR
+        value: uploads
+      - key: MAX_UPLOAD_MB
+        value: 5
+      - key: ADMIN_EMAIL
+        value: admin@takeoff.local
+      - key: ADMIN_PASSWORD
+        value: Admin@12345
+      - key: ADMIN_PHONE
+        value: "+10000000000"
